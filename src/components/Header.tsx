@@ -16,12 +16,17 @@ export default function Header({ activeTab, setActiveTab, adminUser, onLogout, o
   const whatsappUrl = 'https://wa.me/94717237290?text=Hello%20PRINT%20OPTION';
   const callUrl = 'tel:+94717237290';
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'stock-out', label: 'Mark OUT / POS', icon: ShoppingCart },
-    { id: 'inventory', label: 'Stock Inventory', icon: Package },
-    { id: 'cash-balance', label: 'Cash Balance', icon: DollarSign },
-  ];
+  const navItems = adminUser
+    ? [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'stock-out', label: 'Mark OUT / POS', icon: ShoppingCart },
+        { id: 'inventory', label: 'Stock Inventory', icon: Package },
+        { id: 'cash-balance', label: 'Cash Balance', icon: DollarSign },
+      ]
+    : [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'inventory', label: 'Stock (View)', icon: Package },
+      ];
 
   return (
     <header className="bg-slate-900/90 border-b border-slate-800 backdrop-blur-md sticky top-0 z-40 no-print">

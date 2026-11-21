@@ -142,8 +142,10 @@ export default function Home() {
               <InventoryTab
                 items={items}
                 loading={itemsLoading}
+                isAdmin={!!adminUser}
                 onRefresh={fetchItems}
                 onQuickOut={handleQuickOutFromInventory}
+                onOpenLogin={() => setIsLoginModalOpen(true)}
               />
             )}
 

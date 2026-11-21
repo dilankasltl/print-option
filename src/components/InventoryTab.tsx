@@ -14,6 +14,7 @@ import {
   X,
   Upload,
   RefreshCw,
+  Lock,
 } from 'lucide-react';
 import { generateTemplateBlob, exportItemsToExcel, parseExcelFile } from '@/lib/excel';
 
@@ -24,7 +25,6 @@ interface ItemType {
   availableQty: number;
   actualPrice?: number;
   unitPrice: number;
-  costPrice?: number;
   reason: string;
   minAlertQty: number;
   updatedAt: string;
@@ -33,11 +33,20 @@ interface ItemType {
 interface InventoryTabProps {
   items: ItemType[];
   loading: boolean;
+  isAdmin?: boolean;
   onRefresh: () => void;
   onQuickOut: (item: ItemType) => void;
+  onOpenLogin?: () => void;
 }
 
-export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: InventoryTabProps) {
+export default function InventoryTab({
+  items,
+  loading,
+  isAdmin = false,
+  onRefresh,
+  onQuickOut,
+  onOpenLogin,
+}: InventoryTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLowStock, setFilterLowStock] = useState(false);
 
@@ -57,7 +66,6 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
     availableQty: 0,
     actualPrice: 0,
     unitPrice: 0,
-    costPrice: 0,
     reason: 'Stock In',
     minAlertQty: 5,
   });
@@ -92,7 +100,6 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
       availableQty: item.availableQty,
       actualPrice: item.actualPrice || Math.round(item.unitPrice * 1.18),
       unitPrice: item.unitPrice,
-      costPrice: item.costPrice || 0,
       reason: item.reason || 'Stock In',
       minAlertQty: item.minAlertQty || 5,
     });
@@ -129,7 +136,6 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
         availableQty: 0,
         actualPrice: 0,
         unitPrice: 0,
-        costPrice: 0,
         reason: 'Stock In',
         minAlertQty: 5,
       });
@@ -251,47 +257,60 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
         <div>
           <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
             <Package className="w-6 h-6 text-sky-400" />
-            <span>Stock Inventory & Pricing</span>
+            <span>{isAdmin ? 'Stock Inventory & Pricing (Admin)' : 'Stock Catalog (View)'}</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Manage items, one-piece prices, stock levels, and upload via Excel.
+            {isAdmin
+              ? 'Add, edit, delete items, upload Excel sheets, and manage prices.'
+              : 'Live inventory stock levels, prices, and quantities added by Admin.'}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={() => {
-              setFormData({
-                itno: '',
-                itemName: '',
-                availableQty: 0,
-                actualPrice: 0,
-                unitPrice: 0,
-                costPrice: 0,
-                reason: 'Stock In',
-                minAlertQty: 5,
-              });
-              setFormError('');
-              setIsAddModalOpen(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-sky-600/30 transition-all hover:scale-105"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Single Item</span>
-          </button>
+          {isAdmin ? (
+            <>
+              <button
+                onClick={() => {
+                  setFormData({
+                    itno: '',
+                    itemName: '',
+                    availableQty: 0,
+                    actualPrice: 0,
+                    unitPrice: 0,
+                    reason: 'Stock In',
+                    minAlertQty: 5,
+                  });
+                  setFormError('');
+                  setIsAddModalOpen(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-sky-600/30 transition-all hover:scale-105"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Single Item</span>
+              </button>
 
-          <button
-            onClick={() => {
-              setExcelFile(null);
-              setExcelPreviewRows([]);
-              setUploadSummary(null);
-              setIsUploadModalOpen(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-600/20 transition-all hover:scale-105"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>Upload Excel</span>
-          </button>
+              <button
+                onClick={() => {
+                  setExcelFile(null);
+                  setExcelPreviewRows([]);
+                  setUploadSummary(null);
+                  setIsUploadModalOpen(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-600/20 transition-all hover:scale-105"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>Upload Excel</span>
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onOpenLogin}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-600/30 transition-all hover:scale-105"
+            >
+              <Lock className="w-4 h-4" />
+              <span>Admin Login to Add/Edit</span>
+            </button>
+          )}
 
           <button
             onClick={() => exportItemsToExcel(items)}
@@ -446,23 +465,26 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
                             <span>OUT</span>
                           </button>
 
-                          {/* Edit Item */}
-                          <button
-                            onClick={() => handleOpenEdit(item)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
-                            title="Edit Item"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
+                          {/* Edit & Delete Items only visible when Admin is logged in */}
+                          {isAdmin && (
+                            <>
+                              <button
+                                onClick={() => handleOpenEdit(item)}
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+                                title="Edit Item"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
 
-                          {/* Delete Item */}
-                          <button
-                            onClick={() => handleOpenDelete(item)}
-                            className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition"
-                            title="Delete Item"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                              <button
+                                onClick={() => handleOpenDelete(item)}
+                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition"
+                                title="Delete Item"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -596,31 +618,16 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-                    Cost / Buying Price (Optional)
+                    Reason / Notes / Category
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.costPrice || ''}
-                    onChange={(e) => setFormData({ ...formData, costPrice: Number(e.target.value) })}
-                    placeholder="0.00"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                    type="text"
+                    value={formData.reason}
+                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                    placeholder="e.g. Regular Stock, Office Supplies"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-                  Reason / Notes / Category
-                </label>
-                <input
-                  type="text"
-                  value={formData.reason}
-                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                  placeholder="e.g. Regular Stock, Office Supplies, Apparel"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                />
               </div>
 
               <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-800">
