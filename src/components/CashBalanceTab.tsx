@@ -6,7 +6,6 @@ import {
   Calendar,
   Plus,
   Trash2,
-  CheckCircle2,
   RefreshCw,
   Save,
   ArrowUpRight,
@@ -17,7 +16,9 @@ import {
   TrendingUp,
   BarChart3,
   CalendarDays,
-  Clock,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 
 interface ExpenseItem {
@@ -32,10 +33,10 @@ export default function CashBalanceTab() {
   const todayStr = new Date().toISOString().split('T')[0];
   const currentMonthStr = todayStr.substring(0, 7);
 
-  // View mode: 'daily' | 'weekly' | 'monthly'
-  const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  // View modes: 'date' (Date Wise) | 'week' (Week Wise) | 'month' (Month Wise)
+  const [viewMode, setViewMode] = useState<'date' | 'week' | 'month'>('date');
 
-  // Daily State
+  // Date Wise State
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -47,17 +48,16 @@ export default function CashBalanceTab() {
   const [actualClosingCash, setActualClosingCash] = useState<string>('');
   const [notes, setNotes] = useState('');
 
-  // Add expense inputs
+  // Add expense form
   const [newExpenseDesc, setNewExpenseDesc] = useState('');
   const [newExpenseAmount, setNewExpenseAmount] = useState<number>(0);
   const [newExpenseCategory, setNewExpenseCategory] = useState('Shop Supplies');
 
-  // Summary State (Weekly / Monthly)
+  // Week & Month Summary State
   const [summaryData, setSummaryData] = useState<any>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(currentMonthStr);
 
-  // Helper to get auth headers with token from localStorage
   const getAuthHeaders = () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('print_option_token') : null;
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -65,7 +65,7 @@ export default function CashBalanceTab() {
     return headers;
   };
 
-  // 1. Load Daily Cash Data
+  // 1. Load Single Date Wise Data
   const loadDailyData = async (dateStr: string) => {
     setLoading(true);
     setSavedStatus('Loading...');
@@ -92,17 +92,17 @@ export default function CashBalanceTab() {
   };
 
   useEffect(() => {
-    if (viewMode === 'daily') {
+    if (viewMode === 'date') {
       loadDailyData(selectedDate);
     }
   }, [selectedDate, viewMode]);
 
-  // 2. Load Summary Data (Weekly / Monthly)
+  // 2. Load Summary Data for Week Wise or Month Wise
   const loadSummaryData = async () => {
     setSummaryLoading(true);
     try {
-      let url = `/api/cash-balance?type=summary&period=${viewMode}`;
-      if (viewMode === 'monthly') {
+      let url = `/api/cash-balance?type=summary&period=${viewMode === 'week' ? 'week' : 'month'}`;
+      if (viewMode === 'month') {
         url += `&month=${selectedMonth}`;
       } else {
         url += `&date=${selectedDate}`;
@@ -121,12 +121,12 @@ export default function CashBalanceTab() {
   };
 
   useEffect(() => {
-    if (viewMode === 'weekly' || viewMode === 'monthly') {
+    if (viewMode === 'week' || viewMode === 'month') {
       loadSummaryData();
     }
   }, [viewMode, selectedMonth, selectedDate]);
 
-  // 3. Save Cash Balance to MongoDB
+  // Save Cash Balance to MongoDB
   const saveCashData = async (
     newOpening?: number,
     newExpenses?: ExpenseItem[],
@@ -155,7 +155,7 @@ export default function CashBalanceTab() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save');
 
-      setSavedStatus(`Saved to Database at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`);
+      setSavedStatus(`Saved to Database (${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })})`);
     } catch (err: any) {
       console.error('Save error:', err);
       setSavedStatus('Failed to save');
@@ -164,7 +164,7 @@ export default function CashBalanceTab() {
     }
   };
 
-  // Add an expense & Immediately auto-save to MongoDB
+  // Add an expense & Immediately auto-save
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newExpenseDesc || newExpenseAmount <= 0) return;
@@ -182,7 +182,6 @@ export default function CashBalanceTab() {
     setNewExpenseDesc('');
     setNewExpenseAmount(0);
 
-    // Auto-save immediately to database
     await saveCashData(undefined, updatedExpenses, undefined, undefined);
   };
 
@@ -193,16 +192,29 @@ export default function CashBalanceTab() {
     await saveCashData(undefined, updatedExpenses, undefined, undefined);
   };
 
-  // On Opening Cash blur / enter
-  const handleOpeningCashChange = (val: number) => {
-    setOpeningCash(val);
+  // Day navigation shortcuts
+  const handleNavigateDay = (delta: number) => {
+    const curr = new Date(selectedDate + 'T00:00:00');
+    curr.setDate(curr.getDate() + delta);
+    setSelectedDate(curr.toISOString().split('T')[0]);
   };
 
-  const handleOpeningCashBlur = async () => {
-    await saveCashData(openingCash, undefined, undefined, undefined);
+  // Month navigation shortcuts
+  const handleNavigateMonth = (delta: number) => {
+    const [y, m] = selectedMonth.split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    const newMonthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    setSelectedMonth(newMonthStr);
   };
 
-  // Daily Calculations
+  // Week navigation shortcuts
+  const handleNavigateWeek = (deltaDays: number) => {
+    const curr = new Date(selectedDate + 'T00:00:00');
+    curr.setDate(curr.getDate() + deltaDays);
+    setSelectedDate(curr.toISOString().split('T')[0]);
+  };
+
+  // Calculations for Single Date
   const totalExpenses = expenses.reduce((sum, it) => sum + (Number(it.amount) || 0), 0);
   const expectedClosingCash = Number(openingCash) + Number(cashSales) - totalExpenses;
   const counted = actualClosingCash !== '' ? Number(actualClosingCash) : null;
@@ -210,7 +222,7 @@ export default function CashBalanceTab() {
 
   return (
     <div className="space-y-8">
-      {/* Top Banner & Mode Toggle */}
+      {/* Top Banner & Mode Toggle (Date Wise | Week Wise | Month Wise) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/60 p-5 rounded-3xl border border-slate-800">
         <div>
           <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
@@ -218,85 +230,115 @@ export default function CashBalanceTab() {
             <span>Daily Cash Balance & Register</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Reconcile Opening cash + daily cash sales - petty expenses for exact drawer balance.
+            Reconcile and view cash flow: Date wise, Week wise, and Month wise.
           </p>
         </div>
 
-        {/* View Toggle: Daily | Weekly | Monthly */}
-        <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-2xl border border-slate-800 self-start sm:self-auto">
+        {/* 3 Main Tabs: Date Wise | Week Wise | Month Wise */}
+        <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 self-start sm:self-auto">
           <button
-            onClick={() => setViewMode('daily')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-              viewMode === 'daily'
+            onClick={() => setViewMode('date')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              viewMode === 'date'
                 ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <Calendar className="w-3.5 h-3.5" />
-            <span>Daily</span>
+            <span>Date Wise</span>
           </button>
 
           <button
-            onClick={() => setViewMode('weekly')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-              viewMode === 'weekly'
+            onClick={() => setViewMode('week')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              viewMode === 'week'
                 ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <CalendarDays className="w-3.5 h-3.5" />
-            <span>Weekly</span>
+            <span>Week Wise</span>
           </button>
 
           <button
-            onClick={() => setViewMode('monthly')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-              viewMode === 'monthly'
+            onClick={() => setViewMode('month')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              viewMode === 'month'
                 ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <BarChart3 className="w-3.5 h-3.5" />
-            <span>Monthly</span>
+            <span>Month Wise</span>
           </button>
         </div>
       </div>
 
-      {/* VIEW 1: DAILY CASH BALANCE */}
-      {viewMode === 'daily' && (
+      {/* ========================================================
+          TAB 1: DATE WISE VIEW (SINGLE DATE SELECTION & BALANCING)
+         ======================================================== */}
+      {viewMode === 'date' && (
         <div className="space-y-6">
-          {/* Date Picker & Persistence Status Indicator */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/40 p-3.5 rounded-2xl border border-slate-800">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Select Date:
+          {/* Date Selector Bar with Previous/Next & Today Shortcuts */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/50 p-3.5 rounded-2xl border border-slate-800">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-sky-400" /> Select Date:
               </span>
-              <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-700 text-xs text-white">
-                <Calendar className="w-4 h-4 text-sky-400" />
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="bg-transparent text-white font-mono focus:outline-none"
-                />
-              </div>
+
+              {/* Prev Day */}
+              <button
+                onClick={() => handleNavigateDay(-1)}
+                className="p-1.5 rounded-lg bg-slate-950 border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white transition"
+                title="Previous Day"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {/* Main Date Picker Input */}
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="bg-slate-950 border border-sky-500/40 rounded-xl px-3 py-1.5 text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-sky-500"
+              />
+
+              {/* Next Day */}
+              <button
+                onClick={() => handleNavigateDay(1)}
+                className="p-1.5 rounded-lg bg-slate-950 border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white transition"
+                title="Next Day"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              {/* Quick Today Button */}
+              {selectedDate !== todayStr && (
+                <button
+                  onClick={() => setSelectedDate(todayStr)}
+                  className="px-2.5 py-1 rounded-lg bg-sky-600/20 hover:bg-sky-600/40 text-sky-300 border border-sky-500/30 text-xs font-semibold transition"
+                >
+                  Today
+                </button>
+              )}
 
               <button
                 onClick={() => loadDailyData(selectedDate)}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
-                title="Refresh Date Data"
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                title="Refresh"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               </button>
             </div>
 
+            {/* Auto-Save Indicator */}
             <div className="flex items-center gap-2 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-emerald-400 font-mono text-[11px]">{savedStatus}</span>
             </div>
           </div>
 
-          {/* 4-Card Balance Formula */}
+          {/* 4 Formula Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* 1. Opening Cash */}
             <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-3xl shadow-lg relative">
@@ -312,14 +354,14 @@ export default function CashBalanceTab() {
                   type="number"
                   min="0"
                   value={openingCash || ''}
-                  onChange={(e) => handleOpeningCashChange(Number(e.target.value))}
-                  onBlur={handleOpeningCashBlur}
+                  onChange={(e) => setOpeningCash(Number(e.target.value))}
+                  onBlur={() => saveCashData(openingCash)}
                   placeholder="0.00"
                   className="w-full bg-transparent font-mono font-black text-2xl text-white focus:outline-none border-b border-dashed border-slate-700 focus:border-sky-500"
                 />
               </div>
               <p className="text-[10px] text-slate-500 mt-2">
-                Auto-saves when you click out of the box
+                Click out to auto-save
               </p>
             </div>
 
@@ -335,7 +377,7 @@ export default function CashBalanceTab() {
                 Rs. {Number(cashSales).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
               <p className="text-[10px] text-slate-500 mt-2">
-                Auto-synced from daily cash stock-out sales
+                Auto-synced from daily cash sales
               </p>
             </div>
 
@@ -566,91 +608,269 @@ export default function CashBalanceTab() {
         </div>
       )}
 
-      {/* VIEW 2 & 3: WEEKLY / MONTHLY SUMMARY */}
-      {(viewMode === 'weekly' || viewMode === 'monthly') && (
+      {/* ========================================================
+          TAB 2: WEEK WISE VIEW (MONDAY TO SUNDAY SCHEDULE)
+         ======================================================== */}
+      {viewMode === 'week' && (
         <div className="space-y-6">
-          {/* Summary Filter Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/40 p-4 rounded-2xl border border-slate-800">
+          {/* Week Selector Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-sky-400" />
+                <CalendarDays className="w-4 h-4 text-sky-400" />
                 <span>
-                  {viewMode === 'weekly'
-                    ? `Weekly Cash Flow Summary (${summaryData?.summary?.startDate || ''} to ${summaryData?.summary?.endDate || ''})`
-                    : `Monthly Cash Flow Summary (${selectedMonth})`}
+                  Week Wise Summary ({summaryData?.summary?.startDate || '...'} to {summaryData?.summary?.endDate || '...'})
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
-                Aggregate cash in, expenses, and net profit flow.
+                Monday to Sunday full 7-day schedule with cash sales and petty expenses.
               </p>
             </div>
 
             <div className="flex items-center gap-2">
-              {viewMode === 'monthly' ? (
+              <button
+                onClick={() => handleNavigateWeek(-7)}
+                className="p-1.5 rounded-lg bg-slate-950 border border-slate-700 hover:bg-slate-800 text-slate-300 transition"
+                title="Previous Week"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
+                <span className="text-slate-400">Select Date in Week:</span>
                 <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-white font-mono text-xs focus:outline-none"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="bg-transparent text-white font-mono focus:outline-none"
                 />
-              ) : (
-                <div className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
-                  <span className="text-slate-400">Week of:</span>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="bg-transparent text-white font-mono focus:outline-none"
-                  />
-                </div>
-              )}
+              </div>
+
+              <button
+                onClick={() => handleNavigateWeek(7)}
+                className="p-1.5 rounded-lg bg-slate-950 border border-slate-700 hover:bg-slate-800 text-slate-300 transition"
+                title="Next Week"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
 
               <button
                 onClick={loadSummaryData}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${summaryLoading ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
 
-          {/* 3 Summary Cards */}
+          {/* 3 Weekly KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-5 rounded-3xl shadow-xl">
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-1">
-                Total Cash In (Sales)
+                Total Week Cash In (Sales)
               </span>
               <p className="font-mono font-black text-2xl sm:text-3xl text-emerald-400">
                 Rs. {Number(summaryData?.summary?.totalSales || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
-              <p className="text-[11px] text-slate-400 mt-2">All cash receipts in period</p>
+              <p className="text-[11px] text-slate-400 mt-2">Cash sales during this week</p>
             </div>
 
             <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-5 rounded-3xl shadow-xl">
               <span className="text-xs font-bold uppercase tracking-wider text-rose-400 block mb-1">
-                Total Petty Expenses
+                Total Week Petty Expenses
               </span>
               <p className="font-mono font-black text-2xl sm:text-3xl text-rose-400">
                 - Rs. {Number(summaryData?.summary?.totalExpenses || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
-              <p className="text-[11px] text-slate-400 mt-2">All petty cash expenses paid</p>
+              <p className="text-[11px] text-slate-400 mt-2">Petty cash spent this week</p>
             </div>
 
             <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-sky-500/40 p-5 rounded-3xl shadow-xl">
               <span className="text-xs font-bold uppercase tracking-wider text-sky-400 block mb-1">
-                Net Cash Flow
+                Week Net Cash Flow
               </span>
               <p className="font-mono font-black text-2xl sm:text-3xl text-white">
                 Rs. {Number(summaryData?.summary?.netCashFlow || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
-              <p className="text-[11px] text-sky-300/80 mt-2">Cash Sales minus Petty Expenses</p>
+              <p className="text-[11px] text-sky-300/80 mt-2">Sales minus Petty Expenses</p>
             </div>
           </div>
 
-          {/* Day-by-Day Breakdown Table */}
+          {/* 7-Day Weekly Breakdown Table */}
           <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
-              Day-by-Day Cash Breakdown
+              7-Day Weekly Breakdown (Monday to Sunday)
+            </h4>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="bg-slate-950/80 text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                  <tr>
+                    <th className="py-3 px-4">Day & Date</th>
+                    <th className="py-3 px-4 text-right">Opening Cash</th>
+                    <th className="py-3 px-4 text-right">Cash In (Sales)</th>
+                    <th className="py-3 px-4 text-right">Expenses</th>
+                    <th className="py-3 px-4 text-right">Expected Drawer</th>
+                    <th className="py-3 px-4 text-right">Counted</th>
+                    <th className="py-3 px-4 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {!summaryData?.dailyBreakdown || summaryData.dailyBreakdown.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-8 text-slate-500 font-sans">
+                        No cash records logged for this week.
+                      </td>
+                    </tr>
+                  ) : (
+                    summaryData.dailyBreakdown.map((row: any) => (
+                      <tr key={row.dateString} className="hover:bg-slate-800/40 transition">
+                        <td className="py-3 px-4">
+                          <span className="font-bold text-sky-400 block">{row.dayName}</span>
+                          <span className="text-[10px] text-slate-500 font-sans">{row.dateString}</span>
+                        </td>
+                        <td className="py-3 px-4 text-right text-slate-300">
+                          Rs. {Number(row.openingCash).toFixed(2)}
+                        </td>
+                        <td className="py-3 px-4 text-right font-bold text-emerald-400">
+                          Rs. {Number(row.cashSales).toFixed(2)}
+                        </td>
+                        <td className="py-3 px-4 text-right text-rose-400">
+                          -Rs. {Number(row.totalExpenses).toFixed(2)}
+                        </td>
+                        <td className="py-3 px-4 text-right font-bold text-white">
+                          Rs. {Number(row.expectedClosingCash).toFixed(2)}
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          {row.actualClosingCash !== undefined ? (
+                            <span
+                              className={`font-bold ${
+                                row.difference === 0
+                                  ? 'text-emerald-400'
+                                  : row.difference > 0
+                                  ? 'text-sky-400'
+                                  : 'text-rose-400'
+                              }`}
+                            >
+                              Rs. {Number(row.actualClosingCash).toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="text-slate-600">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            onClick={() => {
+                              setSelectedDate(row.dateString);
+                              setViewMode('date');
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-sky-600/20 hover:bg-sky-600/40 text-sky-300 border border-sky-500/30 text-[11px] font-sans font-semibold transition"
+                          >
+                            Open Date
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          TAB 3: MONTH WISE VIEW (MONTH SELECTOR & FULL BREAKDOWN)
+         ======================================================== */}
+      {viewMode === 'month' && (
+        <div className="space-y-6">
+          {/* Month Selector Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-sky-400" />
+                <span>
+                  Month Wise Summary ({selectedMonth})
+                </span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Monthly cash sales, petty expenses, and full calendar breakdown.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleNavigateMonth(-1)}
+                className="p-1.5 rounded-lg bg-slate-950 border border-slate-700 hover:bg-slate-800 text-slate-300 transition"
+                title="Previous Month"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
+                <span className="text-slate-400">Select Month:</span>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="bg-transparent text-white font-mono focus:outline-none"
+                />
+              </div>
+
+              <button
+                onClick={() => handleNavigateMonth(1)}
+                className="p-1.5 rounded-lg bg-slate-950 border border-slate-700 hover:bg-slate-800 text-slate-300 transition"
+                title="Next Month"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={loadSummaryData}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${summaryLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* 3 Monthly KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-5 rounded-3xl shadow-xl">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-1">
+                Total Month Cash In (Sales)
+              </span>
+              <p className="font-mono font-black text-2xl sm:text-3xl text-emerald-400">
+                Rs. {Number(summaryData?.summary?.totalSales || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-2">All cash receipts in {selectedMonth}</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-5 rounded-3xl shadow-xl">
+              <span className="text-xs font-bold uppercase tracking-wider text-rose-400 block mb-1">
+                Total Month Petty Expenses
+              </span>
+              <p className="font-mono font-black text-2xl sm:text-3xl text-rose-400">
+                - Rs. {Number(summaryData?.summary?.totalExpenses || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-2">All petty cash spent in {selectedMonth}</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-sky-500/40 p-5 rounded-3xl shadow-xl">
+              <span className="text-xs font-bold uppercase tracking-wider text-sky-400 block mb-1">
+                Month Net Cash Flow
+              </span>
+              <p className="font-mono font-black text-2xl sm:text-3xl text-white">
+                Rs. {Number(summaryData?.summary?.netCashFlow || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-[11px] text-sky-300/80 mt-2">Monthly Sales minus Expenses</p>
+            </div>
+          </div>
+
+          {/* Monthly Breakdown Table */}
+          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+              Active Days in {selectedMonth} ({summaryData?.dailyBreakdown?.length || 0} Days Recorded)
             </h4>
 
             <div className="overflow-x-auto">
@@ -670,7 +890,7 @@ export default function CashBalanceTab() {
                   {!summaryData?.dailyBreakdown || summaryData.dailyBreakdown.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="text-center py-8 text-slate-500 font-sans">
-                        No cash records logged for this {viewMode}.
+                        No cash records found for {selectedMonth}.
                       </td>
                     </tr>
                   ) : (
@@ -712,7 +932,7 @@ export default function CashBalanceTab() {
                           <button
                             onClick={() => {
                               setSelectedDate(row.dateString);
-                              setViewMode('daily');
+                              setViewMode('date');
                             }}
                             className="px-2.5 py-1 rounded-lg bg-sky-600/20 hover:bg-sky-600/40 text-sky-300 border border-sky-500/30 text-[11px] font-sans font-semibold transition"
                           >
