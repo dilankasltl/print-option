@@ -123,7 +123,7 @@ export default function ChangePasswordModal({
         <div className="mb-5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-2.5 text-amber-300 text-xs">
           <ShieldAlert className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
           <p className="leading-relaxed">
-            නව Password එක save කළ පසු පැරණි Default Password එක (<span className="font-mono font-bold text-amber-200">admin123</span>) සම්පූර්ණයෙන්ම අවලංගු වේ.
+            Once you save a new password, the default password (<span className="font-mono font-bold text-amber-200">admin123</span>) will be permanently deactivated.
           </p>
         </div>
 
