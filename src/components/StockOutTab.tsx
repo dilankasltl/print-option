@@ -21,6 +21,7 @@ interface ItemType {
   itno: string;
   itemName: string;
   availableQty: number;
+  actualPrice?: number;
   unitPrice: number;
   costPrice?: number;
   reason: string;
@@ -397,10 +398,15 @@ export default function StockOutTab({
                 </p>
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 uppercase">Unit Price</p>
-                <p className="text-lg font-black font-mono text-sky-400 mt-0.5">
-                  Rs. {sellingPrice}
-                </p>
+                <p className="text-[10px] text-slate-400 uppercase">Price</p>
+                <div className="flex flex-col items-center mt-0.5">
+                  <span className="line-through text-slate-500 font-mono text-[10px]">
+                    Rs. {(activeItem.actualPrice || Math.round(activeItem.unitPrice * 1.18)).toFixed(2)}
+                  </span>
+                  <span className="text-base font-black font-mono text-emerald-400">
+                    Rs. {sellingPrice}
+                  </span>
+                </div>
               </div>
             </div>
           )}

@@ -83,9 +83,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = getAdminSession(req);
-    if (!session) {
-      return NextResponse.json({ error: 'Admin authentication required' }, { status: 401 });
-    }
+    const recordedBy = session?.username || 'Cashier';
 
     const body = await req.json();
     const {
@@ -198,7 +196,7 @@ export async function POST(req: NextRequest) {
       customerName: String(customerName || '').trim(),
       customerPhone: String(customerPhone || '').trim(),
       reason: String(reason || 'Sale').trim(),
-      recordedBy: session.username || 'admin',
+      recordedBy,
     });
 
     // If payment method is Cash, update CashBalance for this date

@@ -25,6 +25,7 @@ export default function Header({ activeTab, setActiveTab, adminUser, onLogout, o
       ]
     : [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'stock-out', label: 'Mark OUT / POS', icon: ShoppingCart },
         { id: 'inventory', label: 'Stock (View)', icon: Package },
       ];
 
