@@ -1,16 +1,17 @@
 'use client';
 
 import React from 'react';
-import { Phone, MessageCircle, Printer, LogOut, Package, ShoppingCart, DollarSign, LayoutDashboard, ShieldCheck } from 'lucide-react';
+import { Phone, MessageCircle, LogOut, Package, ShoppingCart, DollarSign, LayoutDashboard, ShieldCheck, Lock } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   adminUser: { username: string; name: string } | null;
   onLogout: () => void;
+  onOpenLogin: () => void;
 }
 
-export default function Header({ activeTab, setActiveTab, adminUser, onLogout }: HeaderProps) {
+export default function Header({ activeTab, setActiveTab, adminUser, onLogout, onOpenLogin }: HeaderProps) {
   const phoneNumber = '+94 71 723 7290';
   const whatsappUrl = 'https://wa.me/94717237290?text=Hello%20PRINT%20OPTION';
   const callUrl = 'tel:+94717237290';
@@ -80,12 +81,12 @@ export default function Header({ activeTab, setActiveTab, adminUser, onLogout }:
               <span className="hidden md:inline">WhatsApp</span>
             </a>
 
-            {/* Admin status & Logout */}
-            {adminUser && (
+            {/* Admin status & Logout or Login Button in Top Right Corner */}
+            {adminUser ? (
               <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
-                <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/60 border border-slate-700/50 text-xs text-slate-300">
+                <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-sky-950/60 border border-sky-500/30 text-xs text-sky-300">
                   <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
-                  <span className="font-medium">{adminUser.username}</span>
+                  <span className="font-semibold">{adminUser.username}</span>
                 </div>
                 <button
                   onClick={onLogout}
@@ -93,6 +94,17 @@ export default function Header({ activeTab, setActiveTab, adminUser, onLogout }:
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="pl-1 sm:pl-2 border-l border-slate-800">
+                <button
+                  onClick={onOpenLogin}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-600/30 transition-all hover:scale-105"
+                  title="Admin Sign In"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Admin Login</span>
                 </button>
               </div>
             )}

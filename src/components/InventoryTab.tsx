@@ -22,6 +22,7 @@ interface ItemType {
   itno: string;
   itemName: string;
   availableQty: number;
+  actualPrice?: number;
   unitPrice: number;
   costPrice?: number;
   reason: string;
@@ -54,6 +55,7 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
     itno: '',
     itemName: '',
     availableQty: 0,
+    actualPrice: 0,
     unitPrice: 0,
     costPrice: 0,
     reason: 'Stock In',
@@ -88,6 +90,7 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
       itno: item.itno,
       itemName: item.itemName,
       availableQty: item.availableQty,
+      actualPrice: item.actualPrice || Math.round(item.unitPrice * 1.18),
       unitPrice: item.unitPrice,
       costPrice: item.costPrice || 0,
       reason: item.reason || 'Stock In',
@@ -124,6 +127,7 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
         itno: '',
         itemName: '',
         availableQty: 0,
+        actualPrice: 0,
         unitPrice: 0,
         costPrice: 0,
         reason: 'Stock In',
@@ -261,6 +265,7 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
                 itno: '',
                 itemName: '',
                 availableQty: 0,
+                actualPrice: 0,
                 unitPrice: 0,
                 costPrice: 0,
                 reason: 'Stock In',
@@ -349,7 +354,7 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
                 <th className="py-4 px-4 sm:px-6">ITNO</th>
                 <th className="py-4 px-4 sm:px-6">Item Name</th>
                 <th className="py-4 px-4 sm:px-6 text-center">Available Qty</th>
-                <th className="py-4 px-4 sm:px-6 text-right">One Piece Price</th>
+                <th className="py-4 px-4 sm:px-6 text-right">Actual / Discount Price</th>
                 <th className="py-4 px-4 sm:px-6 text-right hidden md:table-cell">Total Value</th>
                 <th className="py-4 px-4 sm:px-6 hidden lg:table-cell">Reason / Notes</th>
                 <th className="py-4 px-4 sm:px-6 text-center">Actions</th>
@@ -413,8 +418,15 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
                           {item.availableQty}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono font-semibold text-slate-200">
-                        Rs. {Number(item.unitPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono">
+                        <div className="flex flex-col items-end">
+                          <span className="line-through text-slate-500 text-xs font-normal">
+                            Rs. {Number(item.actualPrice || Math.round(item.unitPrice * 1.18)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                          <span className="font-bold text-emerald-400 text-sm">
+                            Rs. {Number(item.unitPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
                       </td>
                       <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-400 hidden md:table-cell">
                         Rs. {(item.availableQty * item.unitPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -539,7 +551,22 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-                    One Piece Price (LKR) *
+                    Actual Price (MRP / Regular)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Regular price with strikethrough"
+                    value={formData.actualPrice || ''}
+                    onChange={(e) => setFormData({ ...formData, actualPrice: Number(e.target.value) })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+                    Discount Price (Selling Price) *
                   </label>
                   <input
                     type="number"
@@ -548,10 +575,12 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
                     value={formData.unitPrice}
                     onChange={(e) => setFormData({ ...formData, unitPrice: Number(e.target.value) })}
                     required
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-emerald-400 font-mono font-bold text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
                   />
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
                     Low Stock Alert Qty
@@ -561,6 +590,21 @@ export default function InventoryTab({ items, loading, onRefresh, onQuickOut }: 
                     min="1"
                     value={formData.minAlertQty}
                     onChange={(e) => setFormData({ ...formData, minAlertQty: Number(e.target.value) })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+                    Cost / Buying Price (Optional)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.costPrice || ''}
+                    onChange={(e) => setFormData({ ...formData, costPrice: Number(e.target.value) })}
+                    placeholder="0.00"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
                   />
                 </div>

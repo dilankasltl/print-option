@@ -4,7 +4,8 @@ export interface IItem extends Document {
   itno: string;
   itemName: string;
   availableQty: number;
-  unitPrice: number;
+  actualPrice: number; // Original / Regular / MRP Price (shown with strikethrough)
+  unitPrice: number;   // Discounted / Selling Price
   costPrice?: number;
   reason: string;
   minAlertQty: number;
@@ -34,9 +35,14 @@ const ItemSchema = new Schema<IItem>(
       default: 0,
       min: [0, 'Available quantity cannot be negative'],
     },
+    actualPrice: {
+      type: Number,
+      default: 0,
+      min: [0, 'Actual price cannot be negative'],
+    },
     unitPrice: {
       type: Number,
-      required: [true, 'One Piece Price is required'],
+      required: [true, 'One Piece Price (Selling / Discounted Price) is required'],
       default: 0,
       min: [0, 'Price cannot be negative'],
     },
@@ -60,7 +66,6 @@ const ItemSchema = new Schema<IItem>(
   }
 );
 
-// Prevent mongoose model recompilation error in Next.js hot reload
 const Item: Model<IItem> = mongoose.models.Item || mongoose.model<IItem>('Item', ItemSchema);
 
 export default Item;

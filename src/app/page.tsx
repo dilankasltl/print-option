@@ -16,6 +16,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [adminUser, setAdminUser] = useState<{ username: string; name: string } | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   // Inventory items state
   const [items, setItems] = useState<any[]>([]);
@@ -93,37 +94,33 @@ export default function Home() {
         <SplashScreen onFinish={() => setShowSplash(false)} />
       )}
 
-      {/* Top Header */}
+      {/* Top Header with Admin Login button in top-right corner */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         adminUser={adminUser}
         onLogout={handleLogout}
+        onOpenLogin={() => setIsLoginModalOpen(true)}
       />
 
       {/* Floating Call & WhatsApp Pill */}
       <FloatingQuickContact />
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Dashboard opens directly! */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {authChecking ? (
+        {authChecking && items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-slate-400">
             <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-sm font-semibold">Initializing PRINT OPTION...</p>
+            <p className="text-sm font-semibold">Loading PRINT OPTION...</p>
           </div>
-        ) : !adminUser ? (
-          <LoginModal
-            onSuccess={(user) => {
-              setAdminUser(user);
-              fetchItems();
-            }}
-          />
         ) : (
           <div>
+            {/* Dashboard Tab with Direct Checkout and Dual Pricing */}
             {activeTab === 'dashboard' && (
               <DashboardTab
                 items={items}
                 onOpenBill={(sale) => setActiveSaleBill(sale)}
+                onRefreshItems={fetchItems}
                 onNavigateToStockOut={(item) => {
                   if (item) setStockOutPreselectedItem(item);
                   setActiveTab('stock-out');
@@ -154,6 +151,18 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* Admin Login Modal (Triggered by Top Right Button) */}
+      {isLoginModalOpen && (
+        <LoginModal
+          onClose={() => setIsLoginModalOpen(false)}
+          onSuccess={(user) => {
+            setAdminUser(user);
+            setIsLoginModalOpen(false);
+            fetchItems();
+          }}
+        />
+      )}
 
       {/* Generated Bill / Receipt Modal */}
       {activeSaleBill && (

@@ -4,7 +4,8 @@ export interface ExcelItemRow {
   ITNO: string;
   'ITEM NAME': string;
   'AVAILABLE QTY': number;
-  'ONE PIECE PRICE': number;
+  'ACTUAL PRICE': number;
+  'DISCOUNT PRICE': number;
   REASON?: string;
 }
 
@@ -14,28 +15,32 @@ export function generateTemplateBlob(): Blob {
       ITNO: 'PO-A4-01',
       'ITEM NAME': 'Double A A4 80gsm Paper Rim',
       'AVAILABLE QTY': 50,
-      'ONE PIECE PRICE': 1450,
+      'ACTUAL PRICE': 1650,
+      'DISCOUNT PRICE': 1450,
       REASON: 'Regular Office Stock',
     },
     {
       ITNO: 'PO-MUG-02',
       'ITEM NAME': 'White Ceramic Sublimation Mug 11oz',
       'AVAILABLE QTY': 120,
-      'ONE PIECE PRICE': 420,
+      'ACTUAL PRICE': 550,
+      'DISCOUNT PRICE': 420,
       REASON: 'Gift Printing Material',
     },
     {
       ITNO: 'PO-INK-03',
       'ITEM NAME': 'Epson 003 Black Ink Bottle',
       'AVAILABLE QTY': 25,
-      'ONE PIECE PRICE': 2100,
+      'ACTUAL PRICE': 2500,
+      'DISCOUNT PRICE': 2100,
       REASON: 'Printer Refill Ink',
     },
     {
       ITNO: 'PO-TSHIRT-04',
       'ITEM NAME': 'Round Neck Cotton T-Shirt L White',
       'AVAILABLE QTY': 80,
-      'ONE PIECE PRICE': 950,
+      'ACTUAL PRICE': 1200,
+      'DISCOUNT PRICE': 950,
       REASON: 'Apparel Printing',
     },
   ];
@@ -46,7 +51,8 @@ export function generateTemplateBlob(): Blob {
     { wch: 15 },
     { wch: 38 },
     { wch: 18 },
-    { wch: 20 },
+    { wch: 18 },
+    { wch: 18 },
     { wch: 30 },
   ];
 
@@ -64,7 +70,8 @@ export function exportItemsToExcel(items: any[]): void {
     ITNO: item.itno,
     'ITEM NAME': item.itemName,
     'AVAILABLE QTY': item.availableQty,
-    'ONE PIECE PRICE': item.unitPrice,
+    'ACTUAL PRICE (LKR)': item.actualPrice || Math.round(item.unitPrice * 1.15),
+    'DISCOUNT PRICE (LKR)': item.unitPrice,
     'TOTAL VALUE (LKR)': item.availableQty * item.unitPrice,
     REASON: item.reason || 'Stock In',
   }));
@@ -75,6 +82,7 @@ export function exportItemsToExcel(items: any[]): void {
     { wch: 40 },
     { wch: 18 },
     { wch: 20 },
+    { wch: 22 },
     { wch: 22 },
     { wch: 30 },
   ];

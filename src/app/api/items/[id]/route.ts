@@ -15,7 +15,7 @@ export async function PUT(
 
     const { id } = params;
     const body = await req.json();
-    const { itno, itemName, availableQty, unitPrice, costPrice, reason, minAlertQty } = body;
+    const { itno, itemName, availableQty, actualPrice, unitPrice, costPrice, reason, minAlertQty } = body;
 
     await connectToDatabase();
 
@@ -41,6 +41,7 @@ export async function PUT(
 
     if (itemName !== undefined) item.itemName = String(itemName).trim();
     if (availableQty !== undefined) item.availableQty = Math.max(0, Number(availableQty));
+    if (actualPrice !== undefined) item.actualPrice = Math.max(0, Number(actualPrice));
     if (unitPrice !== undefined) item.unitPrice = Math.max(0, Number(unitPrice));
     if (costPrice !== undefined) item.costPrice = Math.max(0, Number(costPrice));
     if (reason !== undefined) item.reason = String(reason).trim();

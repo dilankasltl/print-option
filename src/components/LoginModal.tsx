@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lock, User, KeyRound, ArrowRight, Printer, AlertCircle, Phone, MessageCircle } from 'lucide-react';
+import { Lock, User, KeyRound, ArrowRight, AlertCircle, Phone, MessageCircle, X } from 'lucide-react';
 
 interface LoginModalProps {
   onSuccess: (userData: any) => void;
+  onClose?: () => void;
 }
 
-export default function LoginModal({ onSuccess }: LoginModalProps) {
+export default function LoginModal({ onSuccess, onClose }: LoginModalProps) {
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,6 +48,17 @@ export default function LoginModal({ onSuccess }: LoginModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
       <div className="w-full max-w-md bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-sky-500/10 relative overflow-hidden">
+        {/* Close Button */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-5 right-5 p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors z-20"
+            title="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+
         {/* Glow ambient background circles */}
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />

@@ -46,9 +46,13 @@ export async function POST(req: NextRequest) {
       const qtyKey = Object.keys(row).find((k) =>
         /^(available[\s_-]?qty|qty|quantity|available|stock)$/i.test(k.trim())
       );
-      // ONE PIECE PRICE, one pieace price, unit price, price, rate
+      // ACTUAL PRICE, actual price, mrp, regular price, original price
+      const actualPriceKey = Object.keys(row).find((k) =>
+        /^(actual[\s_-]?price|mrp|regular[\s_-]?price|original[\s_-]?price)$/i.test(k.trim())
+      );
+      // ONE PIECE PRICE, one pieace price, unit price, price, rate, discount price
       const priceKey = Object.keys(row).find((k) =>
-        /^(one[\s_-]?pie?ce[\s_-]?price|unit[\s_-]?price|price|rate)$/i.test(k.trim())
+        /^(one[\s_-]?pie?ce[\s_-]?price|unit[\s_-]?price|discount[\s_-]?price|price|rate)$/i.test(k.trim())
       );
       // REASON, reason, category, notes, note
       const reasonKey = Object.keys(row).find((k) =>
@@ -59,6 +63,8 @@ export async function POST(req: NextRequest) {
       const itemName = nameKey ? String(row[nameKey] || '').trim() : '';
       const availableQty = qtyKey ? Number(row[qtyKey]) || 0 : 0;
       const unitPrice = priceKey ? Number(row[priceKey]) || 0 : 0;
+      const parsedActualPrice = actualPriceKey ? Number(row[actualPriceKey]) : 0;
+      const actualPrice = parsedActualPrice > 0 ? parsedActualPrice : Math.round(unitPrice * 1.15);
       const reason = reasonKey ? String(row[reasonKey] || '').trim() : 'Stock In';
 
       if (!itno || !itemName) {
@@ -73,6 +79,7 @@ export async function POST(req: NextRequest) {
           existingItem.itemName = itemName;
           existingItem.availableQty = Math.max(0, availableQty);
           existingItem.unitPrice = Math.max(0, unitPrice);
+          existingItem.actualPrice = actualPrice;
           if (reason) existingItem.reason = reason;
           await existingItem.save();
           updatedCount++;
@@ -84,6 +91,7 @@ export async function POST(req: NextRequest) {
           itno,
           itemName,
           availableQty: Math.max(0, availableQty),
+          actualPrice,
           unitPrice: Math.max(0, unitPrice),
           reason: reason || 'Stock In',
           minAlertQty: 5,

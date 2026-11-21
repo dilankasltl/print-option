@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { itno, itemName, availableQty, unitPrice, costPrice, reason, minAlertQty } = body;
+    const { itno, itemName, availableQty, actualPrice, unitPrice, costPrice, reason, minAlertQty } = body;
 
     if (!itno || !itemName) {
       return NextResponse.json(
@@ -71,11 +71,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const finalUnitPrice = Number(unitPrice) || 0;
+    const finalActualPrice = actualPrice !== undefined && Number(actualPrice) > 0
+      ? Number(actualPrice)
+      : Math.round(finalUnitPrice * 1.15); // default to 15% higher if not specified
+
     const newItem = await Item.create({
       itno: cleanItno,
       itemName: String(itemName).trim(),
       availableQty: Number(availableQty) || 0,
-      unitPrice: Number(unitPrice) || 0,
+      actualPrice: finalActualPrice,
+      unitPrice: finalUnitPrice,
       costPrice: Number(costPrice) || 0,
       reason: reason ? String(reason).trim() : 'Stock In',
       minAlertQty: Number(minAlertQty) || 5,
