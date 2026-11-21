@@ -52,17 +52,24 @@ export default function LoginModal({ onSuccess }: LoginModalProps) {
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative text-center mb-6">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/30 border border-sky-400/40">
-            <Printer className="w-9 h-9 text-white animate-pulse" />
+          <div className="relative w-24 h-24 mx-auto mb-4 group">
+            <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-cyan-400 via-pink-500 to-amber-400 opacity-80 blur-md group-hover:opacity-100 transition animate-pulse" />
+            <div className="relative w-24 h-24 rounded-3xl bg-white p-2 shadow-2xl flex items-center justify-center border border-slate-700 overflow-hidden">
+              <img
+                src="/logo.png"
+                alt="PRINT OPTION"
+                className="w-full h-full object-contain"
+              />
+            </div>
           </div>
-          <h2 className="text-2xl font-black bg-gradient-to-r from-sky-400 via-cyan-300 to-indigo-300 bg-clip-text text-transparent">
+          <h2 className="text-2xl font-black bg-gradient-to-r from-cyan-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">
             PRINT OPTION
           </h2>
-          <p className="text-xs uppercase tracking-widest text-sky-400 font-semibold mt-1">
-            Admin Portal Access
+          <p className="text-xs uppercase tracking-widest text-slate-400 font-semibold mt-0.5">
+            We Print. You Shine.
           </p>
-          <p className="text-xs text-slate-400 mt-2">
-            Secure stock balancing and sales dashboard
+          <p className="text-xs text-sky-400 mt-2 font-medium">
+            Admin Portal Access &bull; Stock & Cash Register
           </p>
         </div>
 

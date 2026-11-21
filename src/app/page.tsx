@@ -9,8 +9,10 @@ import StockOutTab from '@/components/StockOutTab';
 import InventoryTab from '@/components/InventoryTab';
 import CashBalanceTab from '@/components/CashBalanceTab';
 import BillModal from '@/components/BillModal';
+import SplashScreen from '@/components/SplashScreen';
 
 export default function Home() {
+  const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [adminUser, setAdminUser] = useState<{ username: string; name: string } | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
@@ -86,6 +88,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-sky-500 selection:text-white">
+      {/* Opening Intro Splash Animation */}
+      {showSplash && (
+        <SplashScreen onFinish={() => setShowSplash(false)} />
+      )}
+
       {/* Top Header */}
       <Header
         activeTab={activeTab}

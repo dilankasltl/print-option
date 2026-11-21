@@ -29,20 +29,27 @@ export default function Header({ activeTab, setActiveTab, adminUser, onLogout }:
           
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-600 via-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20 border border-sky-400/30">
-              <Printer className="w-7 h-7 text-white animate-pulse" />
+            <div className="relative group">
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-cyan-400 via-pink-500 to-amber-400 opacity-70 blur-sm group-hover:opacity-100 transition duration-300 animate-pulse" />
+              <div className="relative w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center shadow-lg border border-slate-700 overflow-hidden">
+                <img
+                  src="/logo.png"
+                  alt="PRINT OPTION"
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xl sm:text-2xl font-black tracking-wider bg-gradient-to-r from-sky-400 via-cyan-300 to-indigo-300 bg-clip-text text-transparent">
+                <span className="text-xl sm:text-2xl font-black tracking-wider bg-gradient-to-r from-cyan-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">
                   PRINT OPTION
                 </span>
-                <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase bg-sky-500/10 text-sky-400 border border-sky-500/30 rounded-full">
+                <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase bg-sky-500/10 text-cyan-400 border border-cyan-500/30 rounded-full">
                   POS & Stock
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-medium hidden sm:block">
-                Professional Print & Inventory Management
+              <p className="text-[11px] text-slate-400 font-medium tracking-wider hidden sm:block">
+                We Print. You Shine.
               </p>
             </div>
           </div>

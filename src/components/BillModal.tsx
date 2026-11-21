@@ -63,17 +63,21 @@ export default function BillModal({ sale, onClose }: BillModalProps) {
           >
             {/* Header */}
             <div className="text-center pb-4 border-b border-dashed border-slate-300">
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-900 text-white mb-2 font-black text-sm">
-                PO
+              <div className="w-14 h-14 mx-auto mb-1">
+                <img
+                  src="/logo.png"
+                  alt="PRINT OPTION"
+                  className="w-full h-full object-contain mx-auto"
+                />
               </div>
               <h2 className="text-lg font-black tracking-wider text-slate-900 uppercase">
                 PRINT OPTION
               </h2>
-              <p className="text-[11px] text-slate-600 font-sans mt-0.5">
-                Print, Design & Stationery Solutions
+              <p className="text-[10px] text-slate-600 font-sans tracking-widest uppercase">
+                We Print. You Shine.
               </p>
               <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-slate-800 mt-1">
-                <span>Tel: +94 71 723 7290</span>
+                <span>Hotline: +94 71 723 7290</span>
               </div>
             </div>
 
