@@ -131,12 +131,16 @@ export default function LoginModal({ onSuccess, onClose }: LoginModalProps) {
             </div>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-sky-950/40 border border-sky-800/40 text-[11px] text-sky-300 flex items-center justify-between">
+          <div className="p-2.5 rounded-xl bg-sky-950/40 border border-sky-800/40 text-[11px] text-sky-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1">
             <span className="flex items-center gap-1.5">
-              <KeyRound className="w-3.5 h-3.5 text-sky-400" /> Default credentials:
+              <KeyRound className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <span>Initial Default:</span>
+              <span className="font-mono bg-sky-900/60 px-2 py-0.5 rounded text-sky-200">
+                admin / admin123
+              </span>
             </span>
-            <span className="font-mono bg-sky-900/60 px-2 py-0.5 rounded text-sky-200">
-              admin / admin123
+            <span className="text-[10px] text-slate-400 italic">
+              (Invalid once customized)
             </span>
           </div>
 

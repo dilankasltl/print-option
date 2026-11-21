@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { getAdminSession } from '@/lib/auth';
+import { getAdminSession, signToken } from '@/lib/auth';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 
@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = getAdminSession(req);
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized: Please log in first' }, { status: 401 });
     }
 
     const { currentPassword, newPassword } = await req.json();
@@ -28,27 +28,64 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
-    const user = await User.findOne({ username: session.username });
+    const normalizedUsername = (session.username || 'admin').trim().toLowerCase();
+    let user = await User.findOne({ username: normalizedUsername });
+
+    const defaultUser = (process.env.ADMIN_DEFAULT_USERNAME || 'admin').toLowerCase();
+    const defaultPass = process.env.ADMIN_DEFAULT_PASSWORD || 'admin123';
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      // If user document not yet created in DB, check against default password
+      if (normalizedUsername === defaultUser && currentPassword === defaultPass) {
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user = await User.create({
+          username: defaultUser,
+          password: hashedPassword,
+          role: 'admin',
+          name: 'PRINT OPTION Admin',
+        });
+      } else {
+        return NextResponse.json(
+          { error: 'Current password is incorrect' },
+          { status: 400 }
+        );
+      }
+    } else {
+      // User exists in DB: check if currentPassword matches current DB password
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return NextResponse.json(
+          { error: 'Current password is incorrect' },
+          { status: 400 }
+        );
+      }
+
+      // Update with new password hash
+      user.password = await bcrypt.hash(newPassword, 10);
+      await user.save();
     }
 
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-      return NextResponse.json(
-        { error: 'Current password is incorrect' },
-        { status: 400 }
-      );
-    }
-
-    user.password = await bcrypt.hash(newPassword, 10);
-    await user.save();
-
-    return NextResponse.json({
-      success: true,
-      message: 'Password updated successfully',
+    // Generate fresh session token
+    const newToken = signToken({
+      username: user.username,
+      role: user.role,
     });
+
+    const response = NextResponse.json({
+      success: true,
+      message: 'Password updated successfully. Default password is now deactivated.',
+      token: newToken,
+    });
+
+    response.cookies.set('print_option_token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+
+    return response;
   } catch (error: any) {
     console.error('Password update error:', error);
     return NextResponse.json(

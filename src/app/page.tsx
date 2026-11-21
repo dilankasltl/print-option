@@ -10,6 +10,7 @@ import InventoryTab from '@/components/InventoryTab';
 import CashBalanceTab from '@/components/CashBalanceTab';
 import BillModal from '@/components/BillModal';
 import SplashScreen from '@/components/SplashScreen';
+import ChangePasswordModal from '@/components/ChangePasswordModal';
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
@@ -17,6 +18,7 @@ export default function Home() {
   const [adminUser, setAdminUser] = useState<{ username: string; name: string } | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
   // Inventory items state
   const [items, setItems] = useState<any[]>([]);
@@ -101,6 +103,7 @@ export default function Home() {
         adminUser={adminUser}
         onLogout={handleLogout}
         onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenChangePassword={() => setIsChangePasswordModalOpen(true)}
       />
 
       {/* Floating Call & WhatsApp Pill */}
@@ -165,6 +168,12 @@ export default function Home() {
           }}
         />
       )}
+
+      {/* Admin Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+      />
 
       {/* Generated Bill / Receipt Modal */}
       {activeSaleBill && (

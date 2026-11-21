@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Phone, MessageCircle, LogOut, Package, ShoppingCart, DollarSign, LayoutDashboard, ShieldCheck, Lock } from 'lucide-react';
+import { Phone, MessageCircle, LogOut, Package, ShoppingCart, DollarSign, LayoutDashboard, ShieldCheck, Lock, KeyRound } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
@@ -9,9 +9,10 @@ interface HeaderProps {
   adminUser: { username: string; name: string } | null;
   onLogout: () => void;
   onOpenLogin: () => void;
+  onOpenChangePassword?: () => void;
 }
 
-export default function Header({ activeTab, setActiveTab, adminUser, onLogout, onOpenLogin }: HeaderProps) {
+export default function Header({ activeTab, setActiveTab, adminUser, onLogout, onOpenLogin, onOpenChangePassword }: HeaderProps) {
   const phoneNumber = '+94 71 723 7290';
   const whatsappUrl = 'https://wa.me/94717237290?text=Hello%20PRINT%20OPTION';
   const callUrl = 'tel:+94717237290';
@@ -94,6 +95,16 @@ export default function Header({ activeTab, setActiveTab, adminUser, onLogout, o
                   <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
                   <span className="font-semibold">{adminUser.username}</span>
                 </div>
+                {onOpenChangePassword && (
+                  <button
+                    onClick={onOpenChangePassword}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-sky-300 hover:text-white border border-sky-500/30 transition-all text-xs font-semibold group shadow-sm"
+                    title="Change Admin Password"
+                  >
+                    <KeyRound className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
+                    <span className="hidden sm:inline">Change Password</span>
+                  </button>
+                )}
                 <button
                   onClick={onLogout}
                   className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 transition-colors"
