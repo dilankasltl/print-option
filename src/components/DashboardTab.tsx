@@ -152,6 +152,7 @@ export default function DashboardTab({
             {
               itno: checkoutItem.itno,
               qty: checkoutQty,
+              actualPrice: checkoutItem.actualPrice || checkoutItem.unitPrice,
               unitPrice: checkoutItem.unitPrice,
             },
           ],
@@ -240,7 +241,7 @@ export default function DashboardTab({
         </div>
 
         {/* Date Inputs based on mode */}
-        <div className="flex items-center gap-2 self-start lg:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-start lg:self-auto">
           {filterMode === 'day' && (
             <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs text-white">
               <Calendar className="w-4 h-4 text-sky-400" />
@@ -254,21 +255,25 @@ export default function DashboardTab({
           )}
 
           {filterMode === 'range' && (
-            <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs text-white">
-              <span className="text-slate-400">From:</span>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="bg-transparent text-white font-mono focus:outline-none"
-              />
-              <span className="text-slate-400">To:</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="bg-transparent text-white font-mono focus:outline-none"
-              />
+            <div className="flex flex-wrap items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs text-white">
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400">From:</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="bg-transparent text-white font-mono focus:outline-none"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400">To:</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="bg-transparent text-white font-mono focus:outline-none"
+                />
+              </div>
             </div>
           )}
 

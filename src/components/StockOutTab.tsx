@@ -32,6 +32,7 @@ interface CartItem {
   itno: string;
   itemName: string;
   availableQty: number;
+  actualPrice?: number;
   unitPrice: number;
   qty: number;
   total: number;
@@ -149,6 +150,7 @@ export default function StockOutTab({
           itno: activeItem.itno,
           itemName: activeItem.itemName,
           availableQty: activeItem.availableQty,
+          actualPrice: activeItem.actualPrice || activeItem.unitPrice,
           unitPrice: sellingPrice,
           qty: outQty,
           total: outQty * sellingPrice,
@@ -171,7 +173,7 @@ export default function StockOutTab({
     setErrorMsg('');
     setSuccessMsg('');
 
-    let itemsToSubmit: Array<{ itno: string; qty: number; unitPrice: number }> = [];
+    let itemsToSubmit: Array<{ itno: string; qty: number; actualPrice?: number; unitPrice: number }> = [];
 
     if (cartMode) {
       if (cart.length === 0) {
@@ -181,6 +183,7 @@ export default function StockOutTab({
       itemsToSubmit = cart.map((c) => ({
         itno: c.itno,
         qty: c.qty,
+        actualPrice: c.actualPrice,
         unitPrice: c.unitPrice,
       }));
     } else {
@@ -200,6 +203,7 @@ export default function StockOutTab({
         {
           itno: activeItem.itno,
           qty: outQty,
+          actualPrice: activeItem.actualPrice || activeItem.unitPrice,
           unitPrice: sellingPrice,
         },
       ];

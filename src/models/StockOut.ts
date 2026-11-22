@@ -5,6 +5,7 @@ export interface IStockOutItem {
   itno: string;
   itemName: string;
   qty: number;
+  actualPrice?: number;
   unitPrice: number;
   total: number;
 }
@@ -49,6 +50,10 @@ const StockOutItemSchema = new Schema<IStockOutItem>(
       type: Number,
       required: true,
       min: [1, 'Quantity must be at least 1'],
+    },
+    actualPrice: {
+      type: Number,
+      default: 0,
     },
     unitPrice: {
       type: Number,

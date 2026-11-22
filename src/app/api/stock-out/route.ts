@@ -146,6 +146,10 @@ export async function POST(req: NextRequest) {
         requestedItem.unitPrice !== undefined && requestedItem.unitPrice !== null
           ? Number(requestedItem.unitPrice)
           : dbItem.unitPrice;
+      const actualPrice =
+        (requestedItem as any).actualPrice !== undefined && (requestedItem as any).actualPrice !== null
+          ? Number((requestedItem as any).actualPrice)
+          : (dbItem.actualPrice || dbItem.unitPrice);
       const total = unitPrice * qty;
 
       processedItems.push({
@@ -153,6 +157,7 @@ export async function POST(req: NextRequest) {
         itno: dbItem.itno,
         itemName: dbItem.itemName,
         qty,
+        actualPrice,
         unitPrice,
         total,
       });
